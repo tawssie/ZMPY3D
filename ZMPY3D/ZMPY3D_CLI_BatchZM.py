@@ -27,9 +27,9 @@ import argparse
 import os
 import sys
 
-import ZMPY as z
+import ZMPY3D as z
 
-def ZMPY_CLI_BatchZM(PDBFileName,GridWidth=1.0, MaxOrder=6, MaxTargetOrder2NormRotate=5, Mode=0):
+def ZMPY3D_CLI_BatchZM(PDBFileName,GridWidth=1.0, MaxOrder=6, MaxTargetOrder2NormRotate=5, Mode=0):
 
     Param=z.get_global_parameter()
     
@@ -43,7 +43,7 @@ def ZMPY_CLI_BatchZM(PDBFileName,GridWidth=1.0, MaxOrder=6, MaxTargetOrder2NormR
     # with open('./cache_data/LogG_CLMCache_MaxOrder{:02d}.pkl'.format(MaxOrder), 'rb') as file: # Can be used in ipynb, but not at the entry point. 
         CachePKL = pickle.load(file)
     
-    # Extract all cached variables from pickle. These will be converted into a tensor/cupy objects for ZMPY_CP and ZMPY_TF.
+    # Extract all cached variables from pickle. These will be converted into a tensor/cupy objects for ZMPY3D_CP and ZMPY3D_TF.
     BinomialCache=BinomialCachePKL['BinomialCache']
 
     # GCache, CLMCache, and all RotationIndex
@@ -123,7 +123,7 @@ def ZMPY_CLI_BatchZM(PDBFileName,GridWidth=1.0, MaxOrder=6, MaxTargetOrder2NormR
 
 def main():
     if len(sys.argv) != 6:
-        print('Usage: ZMPY_CLI_BatchZM PDBFileList GridWidth MaximumOrder NormOrder Mode')
+        print('Usage: ZMPY3D_CLI_BatchZM PDBFileList GridWidth MaximumOrder NormOrder Mode')
         print('    This function computes the Zernike moment based on the specified maximum order, normalization order, and voxel gridding width.')
         print("Error: You must provide exactly five input arguments.")
         sys.exit(1)
@@ -163,7 +163,7 @@ def main():
 
         pdb_file_list.append(pdb_file)
 
-    Result=ZMPY_CLI_BatchZM(pdb_file_list,args.GW,args.MaxOrder,args.MaxN,args.Mode)
+    Result=ZMPY3D_CLI_BatchZM(pdb_file_list,args.GW,args.MaxOrder,args.MaxN,args.Mode)
 
     np.set_printoptions(threshold=Result[0].size)
 

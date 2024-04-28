@@ -1,10 +1,10 @@
 # The following is specifically for CLI, exported to become a command line interface.
-from .ZMPY_CLI_ZM                import ZMPY_CLI_ZM
-from .ZMPY_CLI_SuperA2B          import ZMPY_CLI_SuperA2B
-from .ZMPY_CLI_ShapeScore        import ZMPY_CLI_ShapeScore
-from .ZMPY_CLI_BatchSuperA2B     import ZMPY_CLI_BatchSuperA2B
-from .ZMPY_CLI_BatchZM           import ZMPY_CLI_BatchZM
-from .ZMPY_CLI_BatchShapeScore   import ZMPY_CLI_BatchShapeScore
+from .ZMPY3D_CLI_ZM                import ZMPY3D_CLI_ZM
+from .ZMPY3D_CLI_SuperA2B          import ZMPY3D_CLI_SuperA2B
+from .ZMPY3D_CLI_ShapeScore        import ZMPY3D_CLI_ShapeScore
+from .ZMPY3D_CLI_BatchSuperA2B     import ZMPY3D_CLI_BatchSuperA2B
+from .ZMPY3D_CLI_BatchZM           import ZMPY3D_CLI_BatchZM
+from .ZMPY3D_CLI_BatchShapeScore   import ZMPY3D_CLI_BatchShapeScore
 
 
 # The following renames and exports all libraries.

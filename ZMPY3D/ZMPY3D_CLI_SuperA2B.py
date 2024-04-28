@@ -20,16 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
 import numpy as np
 import pickle
 import argparse
 import os
 import sys
 
-import ZMPY as z
+import ZMPY3D as z
 
-def ZMPY_CLI_ShapeScore(PDBFileNameA, PDBFileNameB,GridWidth):
+def ZMPY3D_CLI_SuperA2B(PDBFileNameA, PDBFileNameB):
     def ZMCal(PDBFileName,GridWidth,BinomialCache, CLMCache, CLMCache3D, GCache_complex, GCache_complex_index, GCache_pqr_linear, MaxOrder, Param, ResidueBox, RotationIndex):
 
         [XYZ,AA_NameList]=z.get_pdb_xyz_ca(PDBFileName);
@@ -43,69 +42,59 @@ def ZMPY_CLI_ShapeScore(PDBFileNameA, PDBFileNameB,GridWidth):
             'Z_sample': np.arange(Dimension_BBox_scaled[2] + 1)
         }
         
-        [VolumeMass,Center,_]=z.calculate_bbox_moment(Voxel3D,1,XYZ_SampleStruct);
+        [VolumeMass,Center,_]=z.calculate_bbox_moment(Voxel3D,1,XYZ_SampleStruct)
         [AverageVoxelDist2Center,MaxVoxelDist2Center]=z.calculate_molecular_radius(Voxel3D,Center,VolumeMass,Param['default_radius_multiplier'])
+
+        Center_scaled=Center*GridWidth+Corner
 
         ##################################################################################
         # You may add any preprocessing on the voxel before applying the Zernike moment. #
         ##################################################################################
-                
+        
         SphereXYZ_SampleStruct=z.get_bbox_moment_xyz_sample(Center,AverageVoxelDist2Center,Dimension_BBox_scaled)
         _,_,SphereBBoxMoment=z.calculate_bbox_moment(Voxel3D,MaxOrder,SphereXYZ_SampleStruct)
         
+
         [ZMoment_scaled, ZMoment_raw]=z.calculate_bbox_moment_2_zm(MaxOrder, GCache_complex, GCache_pqr_linear, GCache_complex_index, CLMCache3D, SphereBBoxMoment)
-        # ZMoment_scaled[np.isnan(ZMoment_raw)]=np.nan
         
-        ZM_3DZD_invariant=z.get_3dzd_121_descriptor(ZMoment_scaled)
+        ABList_2=z.calculate_ab_rotation_all(ZMoment_raw, 2)
+        ABList_3=z.calculate_ab_rotation_all(ZMoment_raw, 3)
+        ABList_4=z.calculate_ab_rotation_all(ZMoment_raw, 4)
+        ABList_5=z.calculate_ab_rotation_all(ZMoment_raw, 5)
+        ABList_6=z.calculate_ab_rotation_all(ZMoment_raw, 6)
         
-        TargetOrder2NormRotate=2
-        ABList_2=z.calculate_ab_rotation(ZMoment_raw, TargetOrder2NormRotate)
-        ZMList_2=z.calculate_zm_by_ab_rotation(ZMoment_raw, BinomialCache, ABList_2, MaxOrder, CLMCache,s_id,n,l,m,mu,k,IsNLM_Value)
-        [ZM_2,_]=z.get_mean_invariant(ZMList_2)
-
-        TargetOrder2NormRotate=3
-        ABList_3=z.calculate_ab_rotation(ZMoment_raw, TargetOrder2NormRotate)
-        ZMList_3=z.calculate_zm_by_ab_rotation(ZMoment_raw, BinomialCache, ABList_3, MaxOrder, CLMCache,s_id,n,l,m,mu,k,IsNLM_Value)
-        [ZM_3,_]=z.get_mean_invariant(ZMList_3)
-        
-        TargetOrder2NormRotate=4
-        ABList_4=z.calculate_ab_rotation(ZMoment_raw, TargetOrder2NormRotate)
-        ZMList_4=z.calculate_zm_by_ab_rotation(ZMoment_raw, BinomialCache, ABList_4, MaxOrder, CLMCache,s_id,n,l,m,mu,k,IsNLM_Value)
-        [ZM_4,_]=z.get_mean_invariant(ZMList_4)
-        
-        TargetOrder2NormRotate=5
-        ABList_5=z.calculate_ab_rotation(ZMoment_raw, TargetOrder2NormRotate)
-        ZMList_5=z.calculate_zm_by_ab_rotation(ZMoment_raw, BinomialCache, ABList_5, MaxOrder, CLMCache,s_id,n,l,m,mu,k,IsNLM_Value)
-        [ZM_5,_]=z.get_mean_invariant(ZMList_5)
-
-        MomentInvariant=np.concatenate([ z[~np.isnan(z)]     for z in [ZM_3DZD_invariant,ZM_2,ZM_3,ZM_4,ZM_5]])
+        ABList_all=np.vstack(ABList_2+ABList_3+ABList_4+ABList_5+ABList_6)
     
-        TotalResidueWeight=z.get_total_residue_weight(AA_NameList,Param['residue_weight_map'])
-
-        [Prctile_list,STD_XYZ_dist2center,S,K]=z.get_ca_distance_info(XYZ);
-
-        GeoDescriptor = np.vstack((AverageVoxelDist2Center, TotalResidueWeight, Prctile_list, STD_XYZ_dist2center, S, K))
+        ZMList_all=z.calculate_zm_by_ab_rotation(ZMoment_raw, BinomialCache, ABList_all, MaxOrder, CLMCache,s_id,n,l,m,mu,k,IsNLM_Value)
         
-        return MomentInvariant, GeoDescriptor
+        ZMList_all=np.stack(ZMList_all,axis=3)
 
+
+        ZMList_all=np.transpose(ZMList_all,(2,1,0,3)) 
+        ZMList_all=ZMList_all[~np.isnan(ZMList_all)]
+        # Based on ABList_all, it is known in advance that Order 6 will definitely have 96 pairs of AB, which means 96 vectors.
+        ZMList_all=np.reshape(ZMList_all,(np.int64(ZMList_all.size/96),96)) 
     
+        return XYZ, Center_scaled, ABList_all,ZMList_all,AA_NameList
+
     Param=z.get_global_parameter();
-    
-    MaxOrder=20
+
+    MaxOrder=6
     
     BinomialCacheFilePath = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache_data'), 'BinomialCache.pkl')
     with open(BinomialCacheFilePath, 'rb') as file: # Used at the entry point, it requires __file__ to identify the package location
     # with open('./cache_data/BinomialCache.pkl', 'rb') as file: # Can be used in ipynb, but not at the entry point. 
         BinomialCachePKL = pickle.load(file)
 
+
     LogCacheFilePath=os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache_data'), 'LogG_CLMCache_MaxOrder{:02d}.pkl'.format(MaxOrder))
     with open(LogCacheFilePath, 'rb') as file: # Used at the entry point, it requires __file__ to identify the package location
-    # with open('./cache_data/LogG_CLMCache_MaxOrder{:02d}.pkl'.format(MaxOrder), 'rb') as file: # Can be used in ipynb, but not at the entry point. 
+    # with open('./cache_data/LogG_CLMCache_MaxOrder{:02d}.pkl'.format(MaxOrder), 'rb') as file: # Can be used in ipynb, but not at the entry point.
         CachePKL = pickle.load(file)  
 
-    # Extract all cached variables from pickle. These will be converted into a tensor/cupy objects for ZMPY_CP and ZMPY_TF.
+    # Extract all cached variables from pickle. These will be converted into a tensor/cupy objects for ZMPY3D_CP and ZMPY3D_TF.
     BinomialCache=BinomialCachePKL['BinomialCache']
-    
+
     # GCache, CLMCache, and all RotationIndex
     GCache_pqr_linear=CachePKL['GCache_pqr_linear']
     GCache_complex=CachePKL['GCache_complex']
@@ -127,44 +116,37 @@ def ZMPY_CLI_ShapeScore(PDBFileNameA, PDBFileNameB,GridWidth):
     
     ResidueBox=z.get_residue_gaussian_density_cache(Param)
 
-    MomentInvariantRawA, GeoDescriptorA =ZMCal(PDBFileNameA,GridWidth,BinomialCache, CLMCache, CLMCache3D, GCache_complex, GCache_complex_index, GCache_pqr_linear, MaxOrder, Param, ResidueBox, RotationIndex)
-    MomentInvariantRawB, GeoDescriptorB =ZMCal(PDBFileNameB,GridWidth,BinomialCache, CLMCache, CLMCache3D, GCache_complex, GCache_complex_index, GCache_pqr_linear, MaxOrder, Param, ResidueBox, RotationIndex)
+    GridWidth= 1.00; 
 
-    P=z.get_descriptor_property()
+    XYZ_A, Center_scaled_A,ABList_A,ZMList_A,AA_NameList_A =ZMCal(PDBFileNameA,1.00,BinomialCache, CLMCache, CLMCache3D, GCache_complex, GCache_complex_index, GCache_pqr_linear, MaxOrder, Param, ResidueBox, RotationIndex)
+    XYZ_B, Center_scaled_B,ABList_B,ZMList_B,AA_NameList_B =ZMCal(PDBFileNameB,1.00,BinomialCache, CLMCache, CLMCache3D, GCache_complex, GCache_complex_index, GCache_pqr_linear, MaxOrder, Param, ResidueBox, RotationIndex)
+    
+    M = np.abs(ZMList_A.conj().T @ ZMList_B) # square matrix A^T*B 
+    MaxValueIndex = np.where(M == np.max(M)) # MaxValueIndex is a tuple that contains an nd array.
 
-    ZMIndex = np.concatenate((P['ZMIndex0'], P['ZMIndex1'], P['ZMIndex2'], P['ZMIndex3'], P['ZMIndex4']))
-    ZMWeight = np.concatenate((P['ZMWeight0'], P['ZMWeight1'], P['ZMWeight2'], P['ZMWeight3'], P['ZMWeight4']))
-    
-    # Calculating ZMScore
-    ZMScore = np.sum(np.abs(MomentInvariantRawA[ZMIndex] - MomentInvariantRawB[ZMIndex]) * ZMWeight)
-    
-    # Calculating GeoScore
-    GeoScore = np.sum(P['GeoWeight'] * (2 * np.abs(GeoDescriptorA - GeoDescriptorB) / (1 + np.abs(GeoDescriptorA) + np.abs(GeoDescriptorB))))
-    
-    # Calculating paper loss
-    Paper_Loss = ZMScore + GeoScore
-    
-    # Scaled scores, fitted to shape service
-    GeoScoreScaled = (6.6 - GeoScore) / 6.6 * 100.0
-    ZMScoreScaled = (9.0 - ZMScore) / 9.0 * 100.0
+    i, j = MaxValueIndex[0][0], MaxValueIndex[1][0]
 
-    return GeoScoreScaled, ZMScoreScaled
+    RotM_A=z.get_transform_matrix_from_ab_list(ABList_A[i,0],ABList_A[i,1],Center_scaled_A)
+    RotM_B=z.get_transform_matrix_from_ab_list(ABList_B[j,0],ABList_B[j,1],Center_scaled_B)
+    TargetRotM = np.linalg.solve(RotM_B, RotM_A)
 
+
+    return TargetRotM
 
 def main():
-    if len(sys.argv) != 4:
-        print('Usage: ZMPY_CLI_ShapeScore PDB_A PDB_B GridWidth')
-        print('    This function takes two PDB structures and a grid width to generate shape analysis scores.')
-        print('Error: You must provide exactly two input files and an input grid width.')
+    if len(sys.argv) != 3:
+        print('Usage: ZMPY3D_CLI_SuperA2B PDB_A PDB_B')
+        print('    This function generates a transformation matrix to superimpose structure A onto B, i.e., the matrix is for A’s coordinates.')
+        print('Error: You must provide exactly two input files.')
         sys.exit(1)
 
     parser = argparse.ArgumentParser(description='Process two .pdb or .txt files.')
     parser.add_argument('input_file1', type=str, help='The first input file to process (must end with .pdb or .txt) with old PDB text format')
     parser.add_argument('input_file2', type=str, help='The second input file to process (must end with .pdb or .txt) with old PDB text format')
-    parser.add_argument('grid_width', type=str, help='The third input file to process (must 0.25, 0.50 or 1.0)')
 
     args = parser.parse_args()
 
+    # Perform validation checks directly after parsing arguments
     input_files = [args.input_file1, args.input_file2]
     for input_file in input_files:
         if not (input_file.endswith('.pdb') or input_file.endswith('.txt')):
@@ -173,22 +155,11 @@ def main():
         if not os.path.isfile(input_file):
             parser.error("File does not exist")
 
-    try:
-        GridWidth = float(args.grid_width)
-    except ValueError:
-        print("GridWidth cannot be converted to a float.")   
-    
-    if GridWidth not in [0.25, 0.50, 1.0]:
-        parser.error("grid width must be either 0.25, 0.50, or 1.0")
 
-    GeoScoreScaled, ZMScoreScaled=ZMPY_CLI_ShapeScore(args.input_file1,args.input_file2,GridWidth)
+    TargetRotM=ZMPY3D_CLI_SuperA2B(args.input_file1,args.input_file2)
 
-    print('The scaled score for the geometric descriptor is calculated.')
-    print(f'GeoScore {GeoScoreScaled:.2f}')
-
-    print('The scaled score for the Zernike moments is calculated.')
-    print(f'TotalZMScore {ZMScoreScaled:.2f}')
-
+    print('the matrix is for A’s coordinates.')
+    print(TargetRotM)
 
 if __name__ == '__main__':
     main()

@@ -27,9 +27,9 @@ import argparse
 import os
 import sys
 
-import ZMPY as z
+import ZMPY3D as z
 
-def ZMPY_CLI_BatchSuperA2B(PDBFileNameA, PDBFileNameB):
+def ZMPY3D_CLI_BatchSuperA2B(PDBFileNameA, PDBFileNameB):
     def ZMCal(PDBFileName,GridWidth,BinomialCache, CLMCache, CLMCache3D, GCache_complex, GCache_complex_index, GCache_pqr_linear, MaxOrder, Param, ResidueBox, RotationIndex):
 
         [XYZ,AA_NameList]=z.get_pdb_xyz_ca(PDBFileName);
@@ -90,7 +90,7 @@ def ZMPY_CLI_BatchSuperA2B(PDBFileNameA, PDBFileNameB):
     # with open('./cache_data/LogG_CLMCache_MaxOrder{:02d}.pkl'.format(MaxOrder), 'rb') as file: # Can be used in ipynb, but not at the entry point. 
         CachePKL = pickle.load(file)  
 
-    # Extract all cached variables from pickle. These will be converted into a tensor/cupy objects for ZMPY_CP and ZMPY_TF.
+    # Extract all cached variables from pickle. These will be converted into a tensor/cupy objects for ZMPY3D_CP and ZMPY3D_TF.
     BinomialCache=BinomialCachePKL['BinomialCache']
     
     # GCache, CLMCache, and all RotationIndex
@@ -142,7 +142,7 @@ import os
 
 def main():
     if len(sys.argv) != 2:
-        print('Usage: ZMPY_CLI_BatchSuperA2B PDBFileList.txt')
+        print('Usage: ZMPY3D_CLI_BatchSuperA2B PDBFileList.txt')
         print('       This function takes a list of paired PDB structure file paths to generate transformation matrices.')
         print("Error: You must provide exactly one input file.")
         sys.exit(1)
@@ -183,7 +183,7 @@ def main():
         file_list_1.append(file1)
         file_list_2.append(file2)
 
-    TargetRotM=ZMPY_CLI_BatchSuperA2B(file_list_1, file_list_2)
+    TargetRotM=ZMPY3D_CLI_BatchSuperA2B(file_list_1, file_list_2)
 
     for M in TargetRotM:
         print(M)
