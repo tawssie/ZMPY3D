@@ -1,1 +1,1 @@
-include ZMPY/cache_data/*.pkl
+include ZMPY3D/cache_data/*.pkl
