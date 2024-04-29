@@ -79,6 +79,22 @@ Due to GitHub's file size limitations, follow these steps to download the cache 
 ### 3. Download the Cache File:
 - Download the 1.3 GB max order 40 `.pkl` file to the `cache_data` folder from the link below. https://drive.google.com/uc?id=1RR1rF_5YJqaxNC5AK0Ie_8MswGb0Tttw
 
+## Further reading: What can 3D Zernike moments do?
+- Enhancing fold classification
+  * [Real-time structure search and structure classification for AlphaFold protein models](https://doi.org/10.1038/s42003-022-03261-8)
+  * [Real time structural search of the Protein Data Bank](https://doi.org/10.1371/journal.pcbi.1007970)
+- Facilitating structural superpositions
+  * [ZEAL: Protein structure alignment based on shape similarity](https://doi.org/10.1093/bioinformatics/btab205)
+- Supporting protein docking
+  * [Protein-protein docking using region-based 3D Zernike descriptors](https://doi.org/10.1186/1471-2105-10-407)
+- Assisting molecular dynamics
+  * [Binding site identification of G protein-coupled receptors through a 3D Zernike polynomials-based method: application to C. elegans olfactory receptors](https://doi.org/10.1007/s10822-021-00434-1)
+  * [Quantitative characterization of binding pockets and binding complementarity by means of zernike descriptors](https://doi.org/10.1021/acs.jcim.9b01066)
+- Enabling structure-based virtual screening
+  * [PL-PatchSurfer3: Improved Structure-Based Virtual Screening for Structure Variation Using 3D Zernike Descriptors](https://doi.org/10.1101/2024.02.22.581511)
+- Forecasting interacting interfaces
+  * [Antibody interface prediction with 3D Zernike descriptors and SVM](https://doi.org/10.1093/bioinformatics/bty918)
+  * [Exploring the potential of 3D Zernike descriptors and SVM for protein-protein interface prediction](https://doi.org/10.1186/s12859-018-2043-3)
 
 ## Contributing
 
