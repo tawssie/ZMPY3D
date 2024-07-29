@@ -105,7 +105,7 @@ Feel free to submit pull requests for improvements or bug fixes.
 
 ## Citation
 
-Lai, J. S., Burley, S. K., & Duarte, J. M. (2024). ZMPY3D: Accelerating protein structure volume analysis through vectorized 3D Zernike moments and Python-based GPU integration. (Submitted)
+Lai, J. S., Burley, S. K., & Duarte, J. M. (2024). ZMPY3D: Accelerating protein structure volume analysis through vectorized 3D Zernike moments and Python-based GPU integration. (Bioinformatics Advances, Accepted, https://doi.org/10.1093/bioadv/vbae111)
 
 ## License
 
