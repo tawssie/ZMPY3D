@@ -10,7 +10,7 @@ For CPU support only, please refer to the repository:
 `ZMPY3D` supports `NumPy`
 (https://github.com/tawssie/ZMPY3D)
 
-For GPU support with TensorFlow and CuPy, please refer to the other two repositories:
+For GPU support with TensorFlow, CuPy and PyTorch, please refer to the other three repositories:
 
 `ZMPY3D_TF` supports `Tensorflow`
 (https://github.com/tawssie/ZMPY3D_TF)
